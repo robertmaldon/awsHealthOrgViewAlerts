@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'aws health > sns > slack notifications for customers who can not use the AWS Health API.'
+Description: 'aws health > sns > slack notifications for customers who do not have business or enterprise support'
 Metadata:
   License: Apache-2.0
   AWS::CloudFormation::Interface:
