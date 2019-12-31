@@ -1,0 +1,265 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata:
+    License: Apache-2.0
+Description: 'aws health api > dynamodb > slack notifications for customers who have business or enterprise support'
+Metadata:
+    AWS::CloudFormation::Interface:
+        ParameterGroups:
+          - Label:
+              Default: 'Lambda Package Configuration'
+            Parameters:
+              - S3LambdaCodeBucket
+              - S3LambdaCodeZip
+              - S3LayerCodeBucket
+              - S3LayerCodeZip
+          - Label:
+              default: 'Environment Variables'
+            Parameters:
+              - EnvTimeToLiveSeconds
+              - EnvRegions
+          - Label:
+              default: 'SNS Configuration'
+            Parameters:
+              - SNSTopicCreate
+              - SNSNotify
+          - Label:
+              default: 'Slack WebHook'
+            Parameters:
+              - SlackURL
+        ParameterLabels:
+          S3LambdaCodeBucket:
+            default: 'Bucket'
+          S3LambdaCodeZip:
+            default: 'Key'
+          S3LayerCodeBucket:
+            default: 'Bucket'
+          S3LayerCodeZip:
+            default: 'Key'
+          EnvTimetoLiveSeconds:
+            default: 'ttl'
+          EnvRegions:
+            default: 'Regions'
+          SNSTopicCreate:
+            default: 'CreateSNS'
+          SNSNotify:
+            default: 'NotifyEmail'
+          SlackURL:
+            default: 'SlackURL'
+Parameters:
+    SlackURL:
+        Type: String
+        Default: hooks.slack.com/services/xxx/xxxx/xxxxx
+        Description: Enter your Slack webhook URL without https://
+        AllowedPattern: ^((?!http).)*$
+        ConstraintDescription: Please remove http(s):// from URL name
+    EnvTimeToLiveSeconds:
+        Description: 'How far back to search for PHD/SHD events 14400=4hrs'
+        Default: '14400'
+        Type: Number
+    EnvRegions:
+        Description: 'List of specific regions you would like to be alerted on (i.e. 'us-east-1','us-east-2'). If left blank it will alert on all regions. 
+        Type: String
+    SNSNotify:
+        Description: 'Email address to notify, SNSTopicCreate would need to be true'
+        Type: String
+    SNSTopicCreate:
+        Description: 'Whether I should create SNS Topic'
+        Default: false
+        Type: String
+        AllowedValues: [true, false]
+    S3LambdaCodeBucket:
+        Description: 'The S3 bucket name that contains the healthapi-slack.zip lambda package (needs to be in same region you're launching this in)'
+        Type: String
+        Default: just-bucket-name
+    S3LambdaCodeZip:
+        Description: 'The name of the .zip in the above bucket (if in a folder, be sure to include the path, i.e. /packages/healthapi-slack.zip)'
+        Type: String
+        Default: healthapi-slack.zip
+    S3LayerCodeBucket:
+        Description: 'The S3 bucket name that contains the python.zip lambda layer package (needs to be in same region you're launching this in)'
+        Type: String
+        Default: just-bucket-name
+    S3LambdaCodeZip:
+        Description: 'The name of the .zip in the above bucket (if in a folder, be sure to include the path, i.e. /packages/layer/python.zip)'
+        Type: String
+        Default: python.zip
+Conditions:
+    ShouldCreateSNS:
+        !Equals [true, !Ref SNSTopicCreate]
+Resources:
+    SlackKMSKey:
+        Type: 'AWS::KMS::Key'
+        Properties:
+          Description: 'sns-to-slack key used to encrypt slack webhook'
+          EnableKeyRotation: true
+          KeyPolicy:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: Enable IAM User Permissions
+                Effect: Allow
+                Principal:
+                  AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+                Action: 'kms:*'
+                Resource: '*'
+    SlackKMSAlias:
+        Type: 'AWS::KMS::Alias'
+        Properties:
+            AliasName: !Sub 'alias/${AWS::StackName}'
+            TargetKeyId: !Ref SlackKMSKey
+    SHDIssuesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+          AttributeDefinitions:
+          - AttributeName: 'arn'
+            AttributeType: 'S'
+          KeySchema:
+          - AttributeName: 'arn'
+            KeyType: 'HASH'
+          ProvisionedThroughput:
+            ReadCapacityUnits: '5'
+            WriteCapacityUnits: '5'
+          TimeToLiveSpecification:
+            AttributeName: ttl
+            Enabled: TRUE
+    SHDSNSTopic:
+        Type: AWS::SNS::Topic
+        Condition: ShouldCreateSNS
+        Properties:
+          Subscription:
+            - Endpoint: !Ref 'SNSNotify'
+              Protocol: 'email'
+          TopicName: 'SHDNotify'
+    EncryptLambdaExecutionRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow
+                    Principal:
+                      Service:
+                        - lambda.amazonaws.com
+                    Action:
+                      - sts:AssumeRole
+            Path: /
+            Policies:
+            - PolicyName: EncryptKMSLambdaPolicy
+              PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow
+                    Action:
+                      - logs:CreateLogGroup
+                      - logs:CreateLogStream
+                      - logs:PutLogEvents
+                    Resource: arn:aws:logs:*:*:*
+                  - Effect: Allow
+                    Action:
+                      - kms:Encrypt
+                    Resource: !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${SlackKMSKey}'
+    KMSCustomResource:
+        Type: Custom::KMSEncrypt
+        Properties:
+            ServiceToken: !GetAtt LambdaKMSEncryptHook.Arn
+            paramSlackURL: !Ref SlackURL
+            paramKMSKey: !Ref SlackKMSKey                  
+    DecryptLambdaExecutionRole:
+        Type: AWS::IAM::Role
+        Condition: ShouldCreateSNS
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                - lambda.amazonaws.com
+              Action:
+              - sts:AssumeRole
+          Path: '/'
+          Policies:
+          - PolicyName: EncryptKMSLambdaPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+              - Effect: Allow
+                Action:
+                - logs:*
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - health:*
+                  - dynamodb:ListTables
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:UpdateTable
+                  - dynamodb:GetRecords
+                Resource: !GetAtt SHDIssuesTable.Arn
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${SlackKMSKey}'
+              - !If
+                - ShouldCreateSNS
+                - Effect: Allow
+                  Action:
+                    - sns:Publish
+                  Resource: !Ref SHDSNSTopic
+                - !Ref AWS::NoValue
+    LambdaAwsHealthStatus:
+        Type: 'AWS::Lambda::Function'
+        Properties:
+          Handler: 'lambda_function.lambda_handler'
+          Role: !GetAtt DecryptLambdaExecutionRole.Arn
+          Runtime: 'python3.7'
+          Timeout: '90'
+          Description: 'Lambda code to determine if a SHD update has posted'
+          Code:
+            S3Bucket: !Ref S3LambdaCodeBucket
+            S3Key: !Ref S3LambdaCodeZip
+          Environment:
+            Variables:
+              regions: !Ref EnvRegions
+              ttl: !Ref EnvTimeToLiveSeconds
+              enableSNS: !If [ShouldCreateSNS, true, false]
+              SNSTopic: !If [ShouldCreateSNS, !Ref SHDSNSTopic, 'empty']
+              ddbTable: !Ref SHDIssuesTable
+              encryptedWebHook: !Ref KMSCustomResource
+    SHDScheduledRule:
+        Type: AWS::Events::Rule
+        Properties:
+          Description: 'SHDScheduledRule'
+          ScheduleExpression: 'rate(1 minute)'
+          State: 'ENABLED'
+          Targets:
+            - Arn: !GetAtt LambdaAwsHealthStatus.Arn
+              Id: 'SHDHealthEventsToSlack'
+    PermissionForEventsToInvokeLambda:
+        Type: AWS::Lambda::Permission
+        Properties:
+          FunctionName: !GetAtt LambdaAwsHealthStatus.Arn
+          Action: lambda:InvokeFunction
+          Principal: events.amazonaws.com
+          SourceArn: !GetAtt SHDScheduledRule.Arn
+    UpdatedBoto3Layer:
+      Type: AWS::Lambda::LayerVersion
+      Properties:
+        CompatibleRuntimes:
+          - python3.7
+        Content:
+          S3Bucket: !Ref S3LambdaCodeBucket
+          S3Key: !Ref S3LayerCodeKey
+        Description: Updated Boto3 Version
+        LayerName: UpdatedBoto3
+Outputs:
+    TableIssueName:
+        Value: !Ref 'SHDIssuesTable'
+        Description: Table name of the newly created DynamoDB table

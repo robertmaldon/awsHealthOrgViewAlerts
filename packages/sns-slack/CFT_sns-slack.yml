@@ -30,9 +30,9 @@ Parameters:
     S3CodeBucket:
         Type: String
         Default: just-bucket-name
-        Description: The S3 bucket name that contains the sns-slack.zip package
+        Description: The S3 bucket name that contains the sns-slack.zip package (needs to be in same region you're launching this in)
     S3CodeZip:
-        Description: The name of the .zip in the above bucket
+        Description: The name of the .zip in the above bucket (if in a folder, be sure to include the path, i.e. packages/sns-slack.zip)
         Type: String
         Default: sns-slack.zip
 Resources:
@@ -85,6 +85,7 @@ Resources:
                         cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data, PhysicalResourceId)                
             Handler: index.lambda_handler
             Timeout: 30
+            Description: Lambda code to encrypt Slack Webhook
             Role: !GetAtt 'EncryptLambdaExecutionRole.Arn'
             Runtime: python3.7
     LambdaSNStoSlack:
@@ -98,6 +99,7 @@ Resources:
                     encryptedWebHook: !Ref KMSCustomResource
             Handler: lambda_function.lambda_handler
             Timeout: 90
+            Description: Lambda code to post SNS notifications to Slack
             Role: !GetAtt 'DecryptLambdaExecutionRole.Arn'
             Runtime: python3.7
     EncryptLambdaExecutionRole:
@@ -114,20 +116,21 @@ Resources:
                       - sts:AssumeRole
             Path: /
             Policies:
-                - PolicyName: EncryptKMSLambdaPolicy
-                  PolicyDocument:
-                    Version: '2012-10-17'
-                    Statement:
-                      - Effect: Allow
-                        Action:
-                          - logs:CreateLogGroup
-                          - logs:CreateLogStream
-                          - logs:PutLogEvents
-                        Resource: arn:aws:logs:*:*:*
-                      - Effect: Allow
-                        Action:
-                          - kms:Encrypt
-                        Resource: !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${SlackKMSKey}'
+            - PolicyName: EncryptKMSLambdaPolicy-SNSToSlack
+              PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow
+                    Action:
+                      - logs:CreateLogGroup
+                      - logs:CreateLogStream
+                      - logs:PutLogEvents
+                    Resource: arn:aws:logs:*:*:*
+                  - Effect: Allow
+                    Action:
+                      - kms:Encrypt
+                    Resource: !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${SlackKMSKey}'
+        DependsOn: SlackKMSKey
     DecryptLambdaExecutionRole:
         Type: AWS::IAM::Role
         Properties:
@@ -142,7 +145,7 @@ Resources:
                       - sts:AssumeRole
             Path: /
             Policies:
-                - PolicyName: DecryptKMSLambdaPolicy
+                - PolicyName: DecryptKMSLambdaPolicy-SNSToSlack
                   PolicyDocument:
                     Version: '2012-10-17'
                     Statement:
