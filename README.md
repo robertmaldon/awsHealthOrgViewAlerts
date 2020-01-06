@@ -94,7 +94,7 @@ Since either you do not have AWS Business/Enterprise support on all your account
 5. In your AWS console go to *CloudFormation*.
 6. In the *CloudFormation* console **click** *StackSets* then *Create stackset*.
 7. Under *Template Source* **click** *Upload a template file* and **click** *Choose file*  and select `CFT_cw-version.yml` **Click** *Next*.
-8. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)
+8. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)  
 -In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)  
 -In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***  
 -In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip). **Click** *Next*.  
