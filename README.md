@@ -30,9 +30,9 @@ Below is a decision tree to help you know which version is best for you:
 ![](https://github.com/jordanaroth/awsHealthToSlack/blob/master/assets/decision_tree.png?raw=true)
 
 ## Options
-* [Create Incoming Slack Webhook](https://github.com/jordanaroth/awsHealthToSlack/blob/master/README.md/en.html#Create%20Incoming%20Slack%20Webhook) then [CloudWatch version](https://github.com/jordanaroth/awsHealthToSlack/blob/master/README.md/en.html#CloudWatch%20version)
+* [Create Incoming Slack Webhook](#create-incoming-slack-webhook) then [CloudWatch version](#cloudwatch-version)
 Or
-* [Create Incoming Slack Webhook](https://github.com/jordanaroth/awsHealthToSlack/blob/master/README.md/en.html#Create%20Incoming%20Slack%20Webhook) then [Organization Health API version](https://github.com/jordanaroth/awsHealthToSlack/blob/master/READMEr.md/en.html#Organization%20Health%20API%20version)
+* [Create Incoming Slack Webhook](#create-incoming-slack-webhook) then [Organization Health API version](#organization-health-api-version)
 
 # Instructions
 ## Create Incoming Slack Webhook
@@ -49,8 +49,8 @@ Before you start you will need to create a Slack Webhook URL that the Lambda wil
 ## CloudWatch version
 Since either you do not have AWS Business/Enterprise support on all your accounts and/or you are not using AWS Organizations, we will be using aws.health CloudWatch events to notify SNS which will then trigger a Lambda to post to your Slack Webhook. There are 3 deployment methods for the CloudWatch version:
 
-1. [**Single account deployment**](#Single%20account%20API%20deployment): One deployment that monitors the account it was deployed in.
-2. [**CloudFormation Stackset deployment**](#CloudFormation%20Stackset%20API%20deployment): Using CloudFormation Stacksets you deploy once to multiple accounts.
+1. [**Single account deployment**](#single-account-deployment): One deployment that monitors the account it was deployed in.
+2. [**CloudFormation Stackset deployment**](#cloudformation-stackset-deployment): Using CloudFormation Stacksets you deploy once to multiple accounts.
 3. [**CloudWatch Event Bus deployment**](#CloudWatch%20Event%20Bus%20deployment): Have multiple accounts send aws.health events to an account with a CloudWatch Event Bus and deploy in that account.
 
 #### Architecture
@@ -80,7 +80,7 @@ Since either you do not have AWS Business/Enterprise support on all your account
 6. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)
 -In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)
 -In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip)
--In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](Create%20Incoming%20Slack%20Webhook) ***(without https:// in front)***. **Click** *Next*.
+-In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.
 7. Scroll to the bottom and **click** *Next*.
 8. Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
 9. Wait until *Status* changes to *CREATE_COMPLETE* (roughly 5-10 minutes)
@@ -96,7 +96,7 @@ Since either you do not have AWS Business/Enterprise support on all your account
 7. Under *Template Source* **click** *Upload a template file* and **click** *Choose file*  and select `CFT_cw-version.yml` **Click** *Next*.
 8. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)
 -In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)
--In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#Create%20Incoming%20Slack%20Webhook) ***(without https:// in front)***
+-In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***
 -In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip). **Click** *Next*.
 9. Verify that the *IAM execution role name* is *AWSCloudFormationStackSetExecutionRole*. Scroll to the bottom and **click** *Next*.
 10. In *Account numbers* enter in a comma-separated list of account numbers you want to deploy to (i.e. 123456789012,987654321987) OR select *Deploy stacks in organizational units* and enter in the OU identifier of the AWS Organizational Unit you want to deploy to (i.e. ou-123a-bc345de). **Click** the region you want to deploy the resouces to (you'll still get notified of aws.health issues in other regions, this is just for the stack resources). Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
@@ -115,7 +115,7 @@ Since either you do not have AWS Business/Enterprise support on all your account
 9. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)
 -In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)
 -In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip)
--In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#Create%20Incoming%20Slack%20Webhook) ***(without https:// in front)***. **Click** *Next*.
+-In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.
 10. Scroll to the bottom and **click** *Next*.
 11. Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
 12. Wait until *Status* changes to *CREATE_COMPLETE* (roughly 5-10 minutes)
@@ -161,7 +161,7 @@ There is 1 deployment method for the Organization Health API version:
 -In *Layer Key* type ***just*** the location of the `updated-boto3.zip`
 -In *EnvTimeToLiveSeconds* you can leave it default which will search back 4 hours each time (or change it to something bigger/smaller)
 -In *Regions* leave it blank to search all regions or enter in a comma separated list of specific regions you want to alert on (i.e. us-east-1,us-east-2)
--In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#Create%20Incoming%20Slack%20Webhook) ***(without https:// in front)***. **Click** *Next*.
+-In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](##create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.
 7. Scroll to the bottom and **click** *Next*.
 8. Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
 9. Wait until *Status* changes to *CREATE_COMPLETE* (roughly 5-10 minutes)
