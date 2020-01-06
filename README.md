@@ -51,7 +51,7 @@ Since either you do not have AWS Business/Enterprise support on all your account
 
 1. [**Single account deployment**](#single-account-deployment): One deployment that monitors the account it was deployed in.
 2. [**CloudFormation Stackset deployment**](#cloudformation-stackset-deployment): Using CloudFormation Stacksets you deploy once to multiple accounts.
-3. [**CloudWatch Event Bus deployment**](#CloudWatch%20Event%20Bus%20deployment): Have multiple accounts send aws.health events to an account with a CloudWatch Event Bus and deploy in that account.
+3. [**CloudWatch Event Bus deployment**](#cloudwatch-event-bus-deployment): Have multiple accounts send aws.health events to an account with a CloudWatch Event Bus and deploy in that account.
 
 #### Architecture
 ![](https://github.com/jordanaroth/awsHealthToSlack/blob/master/assets/cw-version.png?raw=true)
