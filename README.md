@@ -77,9 +77,9 @@ Since either you do not have AWS Business/Enterprise support on all your account
 3. In your AWS console go to *CloudFormation*.
 4. In the *CloudFormation* console **click** *Create stack > With new resources (standard)*.
 5. Under *Template Source* **click** *Upload a template file* and **click** *Choose file*  and select `CFT_cw-version.yml` **Click** *Next*.
-6. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)
--In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)
--In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip)
+6. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)  
+-In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)  
+-In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip)  
 -In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.
 7. Scroll to the bottom and **click** *Next*.
 8. Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
@@ -95,9 +95,9 @@ Since either you do not have AWS Business/Enterprise support on all your account
 6. In the *CloudFormation* console **click** *StackSets* then *Create stackset*.
 7. Under *Template Source* **click** *Upload a template file* and **click** *Choose file*  and select `CFT_cw-version.yml` **Click** *Next*.
 8. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)
--In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)
--In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***
--In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip). **Click** *Next*.
+-In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)  
+-In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***  
+-In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip). **Click** *Next*.  
 9. Verify that the *IAM execution role name* is *AWSCloudFormationStackSetExecutionRole*. Scroll to the bottom and **click** *Next*.
 10. In *Account numbers* enter in a comma-separated list of account numbers you want to deploy to (i.e. 123456789012,987654321987) OR select *Deploy stacks in organizational units* and enter in the OU identifier of the AWS Organizational Unit you want to deploy to (i.e. ou-123a-bc345de). **Click** the region you want to deploy the resouces to (you'll still get notified of aws.health issues in other regions, this is just for the stack resources). Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
 11. Wait until *Operations - Status* changes to *SUCCEEDED* (timing depends on number of accounts)
@@ -112,9 +112,9 @@ Since either you do not have AWS Business/Enterprise support on all your account
 6. In your AWS console go to *CloudFormation*.
 7. In the *CloudFormation* console **click** *Create stack > With new resources (standard)*.
 8. Under *Template Source* **click** *Upload a template file* and **click** *Choose file*  and select `CFT_cw-version.yml` **Click** *Next*.
-9. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)
--In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)
--In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip)
+9. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)  
+-In *Bucket* type ***just*** the name of the S3 bucket that contains `sns-slack.zip` (i.e. my-bucket-name)  
+-In *Key* type ***just*** the location of the `sns-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip)  
 -In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.
 10. Scroll to the bottom and **click** *Next*.
 11. Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
@@ -154,13 +154,13 @@ There is 1 deployment method for the Organization Health API version:
 4. In your AWS console go to *CloudFormation*.
 4. In the *CloudFormation* console **click** *Create stack > With new resources (standard)*.
 5. Under *Template Source* **click** *Upload a template file* and **click** *Choose file*  and select `CFT_healthapi-version.yml` **Click** *Next*.
-6. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)
--In *Lambda Bucket* type ***just*** the name of the S3 bucket that contains `healthapi-slack.zip` (i.e. my-bucket-name)
--In *Lambda Key* type ***just*** the location of the `healthapi-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip)
--In *Layer Bucket* type ***just*** the name of the S3 bucket that contains `updated-boto3.zip`
--In *Layer Key* type ***just*** the location of the `updated-boto3.zip`
--In *EnvTimeToLiveSeconds* you can leave it default which will search back 4 hours each time (or change it to something bigger/smaller)
--In *Regions* leave it blank to search all regions or enter in a comma separated list of specific regions you want to alert on (i.e. us-east-1,us-east-2)
+6. -In *Stack name* type a stack name (i.e. AWSHealth2Slack)  
+-In *Lambda Bucket* type ***just*** the name of the S3 bucket that contains `healthapi-slack.zip` (i.e. my-bucket-name)  
+-In *Lambda Key* type ***just*** the location of the `healthapi-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip)  
+-In *Layer Bucket* type ***just*** the name of the S3 bucket that contains `updated-boto3.zip`  
+-In *Layer Key* type ***just*** the location of the `updated-boto3.zip`  
+-In *EnvTimeToLiveSeconds* you can leave it default which will search back 4 hours each time (or change it to something bigger/smaller)  
+-In *Regions* leave it blank to search all regions or enter in a comma separated list of specific regions you want to alert on (i.e. us-east-1,us-east-2)  
 -In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.
 7. Scroll to the bottom and **click** *Next*.
 8. Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
