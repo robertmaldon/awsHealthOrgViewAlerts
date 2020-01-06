@@ -265,7 +265,3 @@ Resources:
             Action: lambda:InvokeFunction
             Principal: events.amazonaws.com
             SourceArn: !GetAtt SHDScheduledRule.Arn
-Outputs:
-    TableIssueName:
-        Value: !Ref 'SHDIssuesTable'
-        Description: Table name of the newly created DynamoDB table
