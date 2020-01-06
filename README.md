@@ -126,7 +126,7 @@ When you have AWS Business/Enterprise Support on all your accounts AND are using
 
 There is 1 deployment method for the Organization Health API version:
 
-1. [**Organization Master account deployment**](#Organization%20Master%20account%20deployment): One deployment that monitors all accounts in an AWS organization where all accounts have AWS Business/Enterprise Support.
+1. [**Organization Master account deployment**](#organization-health-api-version): One deployment that monitors all accounts in an AWS organization where all accounts have AWS Business/Enterprise Support.
 
 ### Architecture
 ![](https://github.com/jordanaroth/awsHealthToSlack/blob/master/assets/org-version.png?raw=true)
@@ -161,7 +161,7 @@ There is 1 deployment method for the Organization Health API version:
 -In *Layer Key* type ***just*** the location of the `updated-boto3.zip`
 -In *EnvTimeToLiveSeconds* you can leave it default which will search back 4 hours each time (or change it to something bigger/smaller)
 -In *Regions* leave it blank to search all regions or enter in a comma separated list of specific regions you want to alert on (i.e. us-east-1,us-east-2)
--In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](##create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.
+-In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.
 7. Scroll to the bottom and **click** *Next*.
 8. Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.
 9. Wait until *Status* changes to *CREATE_COMPLETE* (roughly 5-10 minutes)
