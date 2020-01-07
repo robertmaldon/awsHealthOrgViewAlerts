@@ -42,7 +42,7 @@ Before you start you will need to create a Slack Webhook URL that the Lambda wil
 2. In your browser go to: workspace-name.slack.com/apps where workspace-name is the name of your Slack Workspace.
 3. In the search bar, search for: *Incoming Webhooks* and **click** on it.
 4. **Click** on *Add to Slack*
-5. From the dropdown **click** on the channel your created in step 1 and **click** *Add Incoming Webhooks integration*
+5. From the dropdown **click** on the channel your created in step 1 and **click** *Add Incoming Webhooks integration*.
 6. From this page you can change the name of the webhook (i.e. AWS Bot), the icon/emoji to use, etc.
 7. For the deployment we will need the *Webhook URL*.
 
