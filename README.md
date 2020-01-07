@@ -9,15 +9,15 @@
 - [Instructions](#instructions)
   * [Create Incoming Slack Webhook](#create-incoming-slack-webhook)
   * [CloudWatch version](#cloudwatch-version)
-      - [Architecture](#architecture)
+    + [Architecture](#architecture)
     + [Overview](#overview)
       - [Single account deployment](#single-account-deployment)
       - [CloudFormation Stackset deployment](#cloudformation-stackset-deployment)
       - [CloudWatch Event Bus deployment](#cloudwatch-event-bus-deployment)
   * [Organization Health API version](#organization-health-api-version)
     + [Architecture](#architecture-1)
-  * [Overview](#overview-1)
-    + [Organization Master account deployment](#organization-master-account-deployment)
+    + [Overview](#overview-1)
+      - [Organization Master account deployment](#organization-master-account-deployment)
 - [Troubleshooting](#troubleshooting)
 
 # Introduction
