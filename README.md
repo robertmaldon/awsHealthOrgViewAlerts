@@ -30,8 +30,8 @@ Below is a decision tree to help you know which version is best for you:
 ![](https://github.com/jordanaroth/awsHealthToSlack/blob/master/assets/decision_tree.png?raw=true)
 
 ## Options
-* [Create Incoming Slack Webhook](#create-incoming-slack-webhook) then [CloudWatch version](#cloudwatch-version)
-Or
+* [Create Incoming Slack Webhook](#create-incoming-slack-webhook) then [CloudWatch version](#cloudwatch-version)  
+OR  
 * [Create Incoming Slack Webhook](#create-incoming-slack-webhook) then [Organization Health API version](#organization-health-api-version)
 
 # Instructions
