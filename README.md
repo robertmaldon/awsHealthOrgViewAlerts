@@ -14,7 +14,7 @@
 - [Troubleshooting](#troubleshooting)
 
 # Introduction
-AWS Health to Slack (AH2S) is an automated notification tool for sending well-formatted AWS Health events to your Slack channel if you have Business or Enterprise Support
+AWS Health to Slack (AH2S) is an automated notification tool for sending well-formatted Organization AWS Health events to your Slack channel if are utilizing an AWS Organization and have Business or Enterprise Support on all accounts in the Organization.
 
 # Instructions
 ## Create Incoming Slack Webhook
