@@ -5,7 +5,6 @@
 **Table of Contents**
 
 - [Introduction](#introduction)
-  * [Options](#options)
 - [Instructions](#instructions)
   * [Create Incoming Slack Webhook](#create-incoming-slack-webhook)
   * [Organization Health API version](#organization-health-api-to-slack)
