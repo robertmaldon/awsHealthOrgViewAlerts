@@ -56,7 +56,8 @@ def get_healthEntities (awshealth, event, strArn, awsRegion, affectedAccounts):
             affectedEntities.append(entity['entityValue'])
         return affectedEntities
     else:
-        return
+        affectedEntities = ['All resources\nin region']
+        return affectedEntities
     
 # aws.health message for slack  
 def get_healthUpdates(awshealth, event, strArn, awsRegion, affectedAccounts):
@@ -73,9 +74,16 @@ def get_healthUpdates(awshealth, event, strArn, awsRegion, affectedAccounts):
         json_event_details = json.dumps(event_details, cls=DatetimeEncoder)
         parsed_event_details = json.loads (json_event_details)
         healthUpdates = (parsed_event_details['successfulSet'][0]['eventDescription']['latestDescription'])
-        return healthUpdates 
+        return healthUpdates
+    # needed for Service Health Dashboard issues
     else:
-        return
+        event_details = awshealth.describe_event_details (
+            eventArns=[strArn]
+        )
+        json_event_details = json.dumps(event_details, cls=DatetimeEncoder)
+        parsed_event_details = json.loads (json_event_details)
+        healthUpdates = (parsed_event_details['successfulSet'][0]['eventDescription']['latestDescription'])
+        return healthUpdates
 
 # send to slack function
 def send_webhook(updatedOn, strStartTime, strEndTime, event, awsRegion, decodedWebHook, healthUpdates, affectedAccounts, affectedEntities):
@@ -83,12 +91,10 @@ def send_webhook(updatedOn, strStartTime, strEndTime, event, awsRegion, decodedW
     # if no resources/accounts
     if len(affectedEntities) >= 1:
         affectedEntities = "\n".join(affectedEntities)
-    else:
-        affectedEntities = "Not resource\nspecific"
     if len(affectedAccounts) >= 1:
         affectedAccounts = "\n".join(affectedAccounts)
     else:
-        affectedAccounts = "Not account\nspecific"    
+        affectedAccounts = "All accounts\nin region"
     slack_message = {
                     "text": slack_title,
                     "attachments": [

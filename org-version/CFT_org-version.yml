@@ -168,6 +168,7 @@ Resources:
                           - health:DescribeAffectedEntitiesForOrganization
                           - health:DescribeEventDetailsForOrganization
                           - health:DescribeEventsForOrganization 
+                          - health:DescribeEventDetails
                           - organizations:ListAccounts
                         Resource: "*"                          
                       - Effect: Allow
