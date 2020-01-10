@@ -9,7 +9,7 @@
   * [Create Incoming Slack Webhook](#create-incoming-slack-webhook)
   * [Organization Health API version](#organization-health-api-to-slack)
     + [Architecture](#architecture)
-    + [Overview](#overview-1)
+    + [Overview](#overview)
       - [Organization Master account deployment](#organization-master-account-deployment)
 - [Troubleshooting](#troubleshooting)
 
