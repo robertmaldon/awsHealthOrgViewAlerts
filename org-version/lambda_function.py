@@ -154,13 +154,15 @@ def lambda_handler(event, context):
 
     SHDIssuesTable = dynamodb.Table(ddbTable)
 
-    strFilter = {'eventTypeCategories': ['investigation', 'accountNotification', 'issue', 'scheduledChange']}
+    #strFilter = {'eventTypeCategories': ['investigation', 'accountNotification', 'issue', 'scheduledChange']}
 
     if dictRegions != "":
         strFilter = {
                 'regions':
                     dictRegions
     	}
+    else:
+        strFilter = {}
 
     response = awshealth.describe_events_for_organization (
         filter=
@@ -182,8 +184,11 @@ def lambda_handler(event, context):
         now = datetime.strftime(datetime.now(),strDTMFormat)
         strStartTime = parser.parse((event['startTime']))
         strStartTime = strStartTime.strftime(strDTMFormat2)
-        strEndTime = parser.parse((event['endTime']))
-        strEndTime = strEndTime.strftime(strDTMFormat2)
+        if 'endTime' in event:
+            strEndTime = parser.parse((event['endTime']))
+            strEndTime = strEndTime.strftime(strDTMFormat2)
+        else:
+            strEndTime = "None given"
         
         if diff_dates(strUpdate, now) < int(intSeconds):
             try:
