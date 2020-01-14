@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'   
-Description: 'aws health api > dynamodb > slack notifications for customers who have business or enterprise support'
+Description: 'aws organization view health api slack notifications for customers who have business or enterprise support'
 Metadata:
     License: Apache-2.0
     AWS::CloudFormation::Interface:
@@ -29,7 +29,7 @@ Metadata:
             default: 'Layer Bucket'
           S3LayerCodeZip:
             default: 'Layer Key'            
-          EnvTimetoLiveSeconds:
+          EnvTimeToLiveSeconds:
             default: 'ttl'
           EnvRegions:
             default: 'Regions'
@@ -95,8 +95,8 @@ Resources:
           - AttributeName: 'arn'
             KeyType: 'HASH'
           ProvisionedThroughput:
-            ReadCapacityUnits: '5'
-            WriteCapacityUnits: '5'
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
           TimeToLiveSpecification:
             AttributeName: ttl
             Enabled: TRUE
@@ -248,8 +248,7 @@ Resources:
                     regions: !Ref EnvRegions
                     ttl: !Ref EnvTimeToLiveSeconds
                     ddbTable: !Ref SHDIssuesTable
-                    encryptedWebHook: !Ref KMSCustomResource
-        DependsOn: UpdatedBoto3           
+                    encryptedWebHook: !Ref KMSCustomResource         
     SHDScheduledRule:
         Type: AWS::Events::Rule
         Properties:

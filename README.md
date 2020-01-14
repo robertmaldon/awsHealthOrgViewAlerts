@@ -1,5 +1,5 @@
 
-![](https://github.com/jordanaroth/awsHealthToSlack/blob/master/assets/ah2s_logo.png?raw=true)
+![](https://github.com/jordanaroth/awsHealthToSlack/blob/master/images/ah2s_logo.png?raw=true)
 
 
 **Table of Contents**
@@ -36,7 +36,7 @@ There is 1 deployment method for the Organization Health API version:
 1. [**Organization Master account deployment**](#organization-health-api-version): One deployment that monitors all accounts in an AWS organization where all accounts have AWS Business/Enterprise Support.
 
 ### Architecture
-![](https://github.com/jordanaroth/awsHealthToSlack/blob/master/assets/org-version.png?raw=true)
+![](https://github.com/jordanaroth/awsHealthToSlack/blob/master/images/org-version.png?raw=true)
 
 | Resource | Description                    |
 | ------------- | ------------------------------ |
