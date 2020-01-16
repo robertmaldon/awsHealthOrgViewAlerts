@@ -1,5 +1,5 @@
 
-![](https://github.com/jordanaroth/awsHealthToSlack/raw/master/assets-images/ahova_banner.png?raw=true)
+![](https://github.com/jordanaroth/awsHealthToSlack/raw/master/asset-images/ahova_banner.png?raw=1)
 
 
 **Table of Contents**
