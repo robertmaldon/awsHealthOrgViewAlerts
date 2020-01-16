@@ -87,7 +87,7 @@ def get_healthUpdates(awshealth, event, strArn, awsRegion, affectedAccounts):
 
 # send to slack function
 def send_webhook(updatedOn, strStartTime, strEndTime, event, awsRegion, decodedWebHook, healthUpdates, affectedAccounts, affectedEntities):
-    slack_title = str("*:rotating_light:AWS Health Dashboard Alert:rotating_light:*")
+    slack_title = str("*:rotating_light: AWS Health Org View Alert :rotating_light:*")
     # if no resources/accounts
     if len(affectedEntities) >= 1:
         affectedEntities = "\n".join(affectedEntities)
