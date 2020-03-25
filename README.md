@@ -13,6 +13,7 @@
   * [AHOVA for Slack](#ahova-for-slack)
     + [Create Incoming Slack Webhook](#create-incoming-slack-webhook)
     + [Install AHOVA for Slack](#install-ahova-for-slack)
+- [Updating](#updating)
 - [Troubleshooting](#troubleshooting)
 
 # Introduction
@@ -107,6 +108,15 @@ Before you start you will need to create a Slack Webhook URL that the Lambda wil
 8. Scroll to the bottom and **click** the *checkbox* and **click** *Create stack*.   
 9. Wait until *Status* changes to *CREATE_COMPLETE* (roughly 5-10 minutes).   
 10. Unless you received an event on one of your AWS Organization accounts ***after*** you enabled the service in step 1, you will not get any notifications until an event occurs.
+
+# Updating
+**Until this project is migrated to the AWS Serverless Application Model (SAM), updates will have to be done as described below:**
+1. Download both the updated CloudFormation Template .yml file and the healthapi .zip for whichever version you are using.   
+2. Upload the newer healthapi .zip version you are using to the same S3 bucket location as the version you are using now. (Version number should be different in the name of the .zip)   
+3. In the AWS CloudFormation console **click** on the name of your stack, then **click** *Update*.   
+4. In the *Prepare template* section **click** *Replace current template*, then **click** *Upload a template file*, then **click** *Chosse file*, then select the newer 'CFT_xxxxx-version.yml' file you downloaded and finally **click** *Next*.   
+5. In the *Lambda Key* text box change the version number to match the newer version you uploaded in Step 2. The name of the .zip has to be different for CloudFormation to recognize a change. **Click** *Next*.   
+6. At the next screen **click** *Next* and finally **click** *Update stack*. This will now upgrade your environment to the latest version you downloaded.
 
 # Troubleshooting
 * If for whatever reason you need to update the Webhook URL; just update the CloudFormation Template with the new Webhook URL (minus the https:// of course) and the KMSEncryptionLambda will encrypt the new Webhook URL and update the DecryptionLambda.
