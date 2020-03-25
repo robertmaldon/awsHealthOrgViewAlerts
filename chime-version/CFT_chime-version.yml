@@ -58,7 +58,7 @@ Parameters:
     S3LambdaCodeZip:
         Description: The name of the .zip in the above bucket (if in a folder, be sure to include the path, i.e. packages/healthapi-chime-v0.0.0.zip)
         Type: String
-        Default: healthapi-chime.zip
+        Default: healthapi-chime-v0.0.0.zip
         AllowedPattern: .*\.zip$
         ConstraintDescription: Lambda Key or Boto Key location does not end in .zip        
     S3BotoCodeBucket:
