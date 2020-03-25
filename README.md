@@ -25,15 +25,15 @@ AWS Health Organizational View Alerts (AHOVA) is an automated notification tool 
 | ------------- | ------------------------------ |
 | `KMSKey`      | Key used to encrypt the Webhook URL       |
 | `KMSAlias`   | Friendly name for the KMSKey for easy identification     |
-| `SHDIssuesTable`   | DynamoDB Table used to store Event ARNs and updates     |
+| `HealthIssuesTable`   | DynamoDB Table used to store Event ARNs and updates     |
 | `LambdaKMSEncryptHook`      | Inline Lambda function used to take the WebhookURL and encrypt it against the KMSKey       |
-| `LambdaAWSHealthStatus`   | Main Lambda function that decrypts the WebhookURL, reads and writes to SHDIssuesTable and posts to channel/room     |
+| `LambdaAWSHealthStatus`   | Main Lambda function that decrypts the WebhookURL, reads and writes to HealthIssuesTable and posts to channel/room     |
 | `EncryptLambdaExecutionRole`      | IAM role used for LambdaKMSEncryptHook       |
 | `DecryptLambdaExecutionRole`   | IAM role used for LambdaAWSHealthStatus     |
 | `KMSCustomResource`      | Provides the output of the LambdaKMSEncryptHook since KMS encrypt is not a built-in CloudFormation resource       |
 | `UpdatedBoto3`   | A Lambda Layer that includes the version of Boto3 that supports Organizational Health API (v. 1.10.45 or above)     |
-| `SHDScheduledRule`      | Checks API every minute for an update       |
-| `PermissionForEventstoInvokeLambda`   | Allows SHDScheduledRule to invoke LambdaAWSHealthStatus     |
+| `HealthScheduledRule`      | Checks API every minute for an update       |
+| `PermissionForEventstoInvokeLambda`   | Allows HealthScheduledRule to invoke LambdaAWSHealthStatus     |
 
 # Deployment
 When you have AWS Business/Enterprise Support on all your accounts AND are using AWS Organizations, you have access to [AWS Organization Health API](https://docs.aws.amazon.com/health/latest/APIReference/Welcome.html). So instead of waiting for an event to push, you can query the API and get Service Health and Personal Health Dashboard Events of all accounts in your Organization.
@@ -55,8 +55,7 @@ Before you start you will need to create a Amazon Chime Webhook URL that the Lam
 5. **Click** *Copy URL*, we will need it for the deployment.
 
 ### Install AHOVA for Amazon Chime
-**Disclaimer**: As of 2020-01-15, configuring and reading the AWS Health Organizational View API is **only** done via API calls. In other words, you can NOT see entries and/or status in the console. Also, ***AWS Health Organizational View Alerts only starts working once you enable it (Step 1 below), which means any events that occurred before enabling, will not get added. You will need to wait for a Health event to happen to one of the accounts in your AWS Organization to verify everything is working correctly***.
-**Disclaimer**: As of 2020-01-15, configuring and reading the AWS Health Organizational View API is **only** done via API calls. In other words, you can NOT see entries and/or status in the console. Also, ***AWS Health Organizational View Alerts only starts working once you enable it (Step 1 below), which means any events that occurred before enabling, will not get added. You will need to wait for a Health event to happen to one of the accounts in your AWS Organization to verify everything is working correctly***.
+**Disclaimer**: As of 2020-03-22, configuring and reading the AWS Health Organizational View API is **only** done via API calls. In other words, you can NOT see entries and/or status in the console. Also, ***AWS Health Organizational View Alerts only starts working once you enable it (Step 1 below), which means any events that occurred before enabling, will not get added. You will need to wait for a Health event to happen to one of the accounts in your AWS Organization to verify everything is working correctly***.
 1. The first thing you will need to do is enable [AWS Organization Health Service Access](https://docs.aws.amazon.com/health/latest/APIReference/API_EnableHealthServiceAccessForOrganization.html).  To do so, you need to have python (at least 3.6) and the following packages installed: `awscli` and `boto3 (at least 1.10.45)`. Configure `awscli` for your AWS Organization Master account, instructions are [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html). Once configured, run the command `aws health enable-health-service-access-for-organization`, to verify it worked run `aws health describe-health-service-status-for-organization`. You should get a response back that says `"healthServiceAccessStatusForOrganization": "ENABLED"`. **Remember, only Health events that occurred from this point forward will be sent to Amazon Chime**.
 2. In the folder `chime-version` you will find three files you will need: `CFT_chime-version.yml`, `healthapi-chime.zip` and `updated-boto3.zip`.   
 3. Upload `healthapi-chime.zip` and `updated-boto3.zip` to S3 in the same region you plan to deploy this in.   
@@ -66,9 +65,8 @@ Before you start you will need to create a Amazon Chime Webhook URL that the Lam
 6. -In *Stack name* type a stack name (i.e. AHOVAChime).   
 -In *Lambda Bucket* type ***just*** the name of the S3 bucket that contains `healthapi-chime.zip` (i.e. my-bucket-name).     
 -In *Lambda Key* type ***just*** the location of the `healthapi-chime.zip` (i.e. if in root bucket, healthapi-chime.zip or in a folder, foldername/healthapi_chime.zip).   
--In *Layer Bucket* type ***just*** the name of the S3 bucket that contains `updated-boto3.zip`.   
--In *Layer Key* type ***just*** the location of the `updated-boto3.zip`.   
--In *ttl* you can leave it default which will search back 4 hours each time (or change it to something bigger/smaller).     
+-In *Boto Key* type ***just*** the location of the `updated-boto3.zip`.   
+-In *Search Back* is the amount of hours to search back for new and/or updated events (default = 24 hours).     
 -In *Regions* leave it blank to search all regions or enter in a comma separated list of specific regions you want to alert on (i.e. us-east-1,us-east-2).   
 -In *ChimeURL* put in the *Webhook URL* you got from *Step 5* in the [Create Incoming Amazon Chime Webhook](#create-incoming-amazon-chime-webhook) ***(without https:// in front)***. **Click** *Next*.
 7. Scroll to the bottom and **click** *Next*.   
@@ -92,17 +90,17 @@ Before you start you will need to create a Slack Webhook URL that the Lambda wil
 ### Install AHOVA for Slack
 **Disclaimer**: As of 2020-01-15, configuring and reading the AWS Health Organizational View API is **only** done via API calls. In other words, you can NOT see entries and/or status in the console. Also, ***AWS Health Organizational View Alerts only starts working once you enable it (Step 1 below), which means any events that occurred before enabling, will not get added. You will need to wait for a Health event to happen to one of the accounts in your AWS Organization to verify everything is working correctly***.
 1. The first thing you will need to do is enable [AWS Organization Health Service Access](https://docs.aws.amazon.com/health/latest/APIReference/API_EnableHealthServiceAccessForOrganization.html).  To do so, you need to run have python and the following packages installed: `awscli` and `boto3 (at least 1.10.45)`. Configure `awscli` for your AWS Organization Master account, instructions are [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html). Once configured, run the command `aws health enable-health-service-access-for-organization`, to verify it worked run `aws health describe-health-service-status-for-organization`. You should get a response back that says `"healthServiceAccessStatusForOrganization": "ENABLED"`. **Remember, only Health events that occurred from this point forward will be sent to Slack**.
-2. In the folder `slack-version` you will find three files you will need: `CFT_slack-version.yml`, `healthapi-slack.zip` and `updated-boto3.zip`.   
-3. Upload `healthapi-slack.zip` and `updated-boto3.zip` to S3 in the same region you plan to deploy this in.   
+2. In the folder `slack-version` you will find three files you will need: `CFT_slack-version.yml`, `healthapi-slack-v0.0.0.zip` and `updated-boto3.zip`.   
+3. Upload `healthapi-slack-v0.0.0.zip` and `updated-boto3.zip` to S3 in the same region you plan to deploy this in.   
 4. In your AWS console go to *CloudFormation*.   
 4. In the *CloudFormation* console **click** *Create stack > With new resources (standard)*.   
 5. Under *Template Source* **click** *Upload a template file* and **click** *Choose file*  and select `CFT_slack-version.yml` **Click** *Next*.   
 6. -In *Stack name* type a stack name (i.e. AHOVASlack).   
--In *Lambda Bucket* type ***just*** the name of the S3 bucket that contains `healthapi-slack.zip` (i.e. my-bucket-name).   
--In *Lambda Key* type ***just*** the location of the `healthapi-slack.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip).   
--In *Layer Bucket* type ***just*** the name of the S3 bucket that contains `updated-boto3.zip`.   
--In *Layer Key* type ***just*** the location of the `updated-boto3.zip`.   
--In *EnvTimeToLiveSeconds* you can leave it default which will search back 4 hours each time (or change it to something bigger/smaller).   
+-In *Lambda Bucket* type ***just*** the name of the S3 bucket that contains `healthapi-slack-v0.0.0.zip` (i.e. my-bucket-name).   
+-In *Lambda Key* type ***just*** the location of the `healthapi-slack-v0.0.0.zip` (i.e. if in root bucket, sns-slack.zip or in a folder, foldername/sns-slack.zip).   
+-In *Boto Bucket* type ***just*** the name of the S3 bucket that contains `updated-boto3.zip`.   
+-In *Boto Key* type ***just*** the location of the `updated-boto3.zip`.   
+-In *Search Back* is the amount of hours to search back for new and/or updated events (default = 24 hours).  
 -In *Regions* leave it blank to search all regions or enter in a comma separated list of specific regions you want to alert on (i.e. us-east-1,us-east-2).   
 -In *SlackURL* put in the *Webhook URL* you got from *Step 7* in the [Webhook Instructions](#create-incoming-slack-webhook) ***(without https:// in front)***. **Click** *Next*.   
 7. Scroll to the bottom and **click** *Next*.   

@@ -18,13 +18,12 @@ def diff_dates(strDate1, strDate2):
     return intSecs
 
 # dynamoDB function
-def update_ddb(objTable, strArn, strUpdate, now, intSeconds):
+def update_ddb(objTable, strArn, strUpdate, now, intHours):
     response = objTable.put_item(
       Item ={
         'arn' : strArn,
         'lastUpdatedTime' : strUpdate,
-        'added' : now,
-        'ttl' : int(now) + int(intSeconds) + 3600
+        'added' : now
       }
     )
 # aws.health affected accounts
@@ -128,7 +127,8 @@ class DatetimeEncoder(json.JSONEncoder):
 
 # main function
 def lambda_handler(event, context):
-    intSeconds = os.environ['ttl']  # 14400
+    intHours = os.environ['searchback']
+    intHours = int(intHours)*3600
     dictRegions = os.environ['regions']
     encryptedWebHook = os.environ['encryptedWebHook']
     ddbTable = os.environ['ddbTable']
@@ -152,7 +152,7 @@ def lambda_handler(event, context):
     string_response = response.decode('ascii')
     decodedWebHook = "https://" + string_response
 
-    SHDIssuesTable = dynamodb.Table(ddbTable)
+    HealthIssuesTable = dynamodb.Table(ddbTable)
 
     if dictRegions != "":
         strFilter = {
@@ -167,51 +167,53 @@ def lambda_handler(event, context):
             strFilter
         ,
     )
+    event_paginator = awshealth.get_paginator('describe_events_for_organization')
+    event_page_iterator = event_paginator.paginate(filter=strFilter)
+    for response in event_page_iterator:
+        json_pre = json.dumps(response, cls=DatetimeEncoder)
+        json_events = json.loads (json_pre)
 
-    json_pre = json.dumps(response, cls=DatetimeEncoder)
-    json_events = json.loads (json_pre)
-
-    events = json_events.get('events')
-    print("Event received: ", json.dumps(events))
-    for event in events :
-        strEventTypeCode = event['eventTypeCode']
-        strArn = (event['arn'])
-        # configure times
-        strUpdate = parser.parse((event['lastUpdatedTime']))
-        strUpdate = strUpdate.strftime(strDTMFormat)
-        now = datetime.strftime(datetime.now(),strDTMFormat)
-        strStartTime = parser.parse((event['startTime']))
-        strStartTime = strStartTime.strftime(strDTMFormat2)
-        if 'endTime' in event:
-            strEndTime = parser.parse((event['endTime']))
-            strEndTime = strEndTime.strftime(strDTMFormat2)
-        else:
-            strEndTime = "None given"
-        
-        if diff_dates(strUpdate, now) < int(intSeconds):
-            try:
-                response = SHDIssuesTable.get_item(
-                    Key = {
-                        'arn' : strArn
-                    }
-            )
-            except ClientError as e:
-                print(e.response['Error']['Message'])
+        events = json_events.get('events')
+        print("Event received: ", json.dumps(events))
+        for event in events :
+            strEventTypeCode = event['eventTypeCode']
+            strArn = (event['arn'])
+            # configure times
+            strUpdate = parser.parse((event['lastUpdatedTime']))
+            strUpdate = strUpdate.strftime(strDTMFormat)
+            now = datetime.strftime(datetime.now(),strDTMFormat)
+            strStartTime = parser.parse((event['startTime']))
+            strStartTime = strStartTime.strftime(strDTMFormat2)
+            if 'endTime' in event:
+                strEndTime = parser.parse((event['endTime']))
+                strEndTime = strEndTime.strftime(strDTMFormat2)
             else:
-                isItemResponse = response.get('Item')
-                if isItemResponse == None:
-                    print (datetime.now().strftime(strDTMFormat2)+": record not found")
-                    update_ddb(SHDIssuesTable, strArn, strUpdate, now, intSeconds)
-                    affectedAccounts = get_healthAccounts (awshealth, event, strArn, awsRegion)
-                    healthUpdates = get_healthUpdates(awshealth, event, strArn, awsRegion, affectedAccounts)
-                    affectedEntities = get_healthEntities(awshealth, event, strArn, awsRegion, affectedAccounts)
-                    send_webhook(datetime.now().strftime(strDTMFormat2), strStartTime, strEndTime, event, awsRegion, decodedWebHook, healthUpdates, affectedAccounts, affectedEntities)
+                strEndTime = "None given"
+            
+            if diff_dates(strUpdate, now) < int(intHours):
+                try:
+                    response = HealthIssuesTable.get_item(
+                        Key = {
+                            'arn' : strArn
+                        }
+                )
+                except ClientError as e:
+                    print(e.response['Error']['Message'])
                 else:
-                    item = response['Item']
-                    if item['lastUpdatedTime'] != strUpdate:
-                      print (datetime.now().strftime(strDTMFormat2)+": last Update is different")
-                      update_ddb(SHDIssuesTable, strArn, strUpdate, now, intSeconds)
-                      affectedAccounts = get_healthAccounts (awshealth, event, strArn, awsRegion)                      
-                      healthUpdates = get_healthUpdates(awshealth, event, strArn, awsRegion, affectedAccounts)
-                      affectedEntities = get_healthEntities(awshealth, event, strArn, awsRegion, affectedAccounts)
-                      send_webhook(datetime.now().strftime(strDTMFormat2), strStartTime, strEndTime, event, awsRegion, decodedWebHook, healthUpdates, affectedAccounts, affectedEntities)
+                    isItemResponse = response.get('Item')
+                    if isItemResponse == None:
+                        print (datetime.now().strftime(strDTMFormat2)+": record not found")
+                        update_ddb(HealthIssuesTable, strArn, strUpdate, now, intHours)
+                        affectedAccounts = get_healthAccounts (awshealth, event, strArn, awsRegion)
+                        healthUpdates = get_healthUpdates(awshealth, event, strArn, awsRegion, affectedAccounts)
+                        affectedEntities = get_healthEntities(awshealth, event, strArn, awsRegion, affectedAccounts)
+                        send_webhook(datetime.now().strftime(strDTMFormat2), strStartTime, strEndTime, event, awsRegion, decodedWebHook, healthUpdates, affectedAccounts, affectedEntities)
+                    else:
+                        item = response['Item']
+                        if item['lastUpdatedTime'] != strUpdate:
+                          print (datetime.now().strftime(strDTMFormat2)+": last Update is different")
+                          update_ddb(HealthIssuesTable, strArn, strUpdate, now, intHours)
+                          affectedAccounts = get_healthAccounts (awshealth, event, strArn, awsRegion)                      
+                          healthUpdates = get_healthUpdates(awshealth, event, strArn, awsRegion, affectedAccounts)
+                          affectedEntities = get_healthEntities(awshealth, event, strArn, awsRegion, affectedAccounts)
+                          send_webhook(datetime.now().strftime(strDTMFormat2), strStartTime, strEndTime, event, awsRegion, decodedWebHook, healthUpdates, affectedAccounts, affectedEntities)

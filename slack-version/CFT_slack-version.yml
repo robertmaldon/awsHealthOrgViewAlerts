@@ -9,12 +9,12 @@ Metadata:
             Parameters:
               - S3LambdaCodeBucket
               - S3LambdaCodeZip
-              - S3LayerCodeBucket
-              - S3LayerCodeZip
+              - S3BotoCodeBucket
+              - S3BotoCodeZip
           - Label:
               default: 'Environment Variables'
             Parameters:
-              - EnvTimeToLiveSeconds
+              - EnvTimeToSearch
               - EnvRegions
           - Label:
               default: 'Slack WebHook'
@@ -25,12 +25,12 @@ Metadata:
             default: 'Lambda Bucket'
           S3LambdaCodeZip:
             default: 'Lambda Key'
-          S3LayerCodeBucket:
-            default: 'Layer Bucket'
-          S3LayerCodeZip:
-            default: 'Layer Key'            
-          EnvTimeToLiveSeconds:
-            default: 'ttl'
+          S3BotoCodeBucket:
+            default: 'Boto Bucket'
+          S3BotoCodeZip:
+            default: 'Boto Key'            
+          EnvTimeToSearch:
+            default: 'Search Back'
           EnvRegions:
             default: 'Regions'
           SlackURL:
@@ -41,10 +41,10 @@ Parameters:
         Default: hooks.slack.com/services/xxx/xxxx/xxxxx
         Description: Enter your Slack webhook URL without https://
         AllowedPattern: ^((?!http).)*$
-        ConstraintDescription: Please remove http(s):// from URL name
-    EnvTimeToLiveSeconds:
-        Description: 'How far back to search for PHD/SHD events 14400=4hrs'
-        Default: '14400'
+        ConstraintDescription: Please remove http(s):// from URL name in Slack URL
+    EnvTimeToSearch:
+        Description: 'How many hours back to search for Health Events (default = 24 hours)'
+        Default: '24'
         Type: Number
     EnvRegions:
         Description: List of specific regions you would like to be alerted on. (i.e. 'us-east-1','us-east-2'). If left blank it will alert on all regions
@@ -53,18 +53,26 @@ Parameters:
         Description: The S3 bucket name that contains the healthapi-slack.zip lambda package (needs to be in same region you're launching this in)
         Type: String
         Default: just-bucket-name
+        AllowedPattern: (?!^(\d{1,3}\.){3}\d{1,3}$)(^[a-z0-9]([a-z0-9-]*(\.[a-z0-9])?)*$(?<!\-))
+        ConstraintDescription: Invalid S3 Bucket name, make sure you JUST putting in the name of your bucket
     S3LambdaCodeZip:
         Description: The name of the .zip in the above bucket (if in a folder, be sure to include the path, i.e. packages/healthapi-slack.zip)
         Type: String
         Default: healthapi-slack.zip
-    S3LayerCodeBucket:
+        AllowedPattern: .*\.zip$
+        ConstraintDescription: Lambda Key or Boto Key location does not end in .zip
+    S3BotoCodeBucket:
         Description: The S3 bucket name that contains the updated-boto3.zip layer package (needs to be in same region you're launching this in)
         Type: String
         Default: just-bucket-name
-    S3LayerCodeZip:
+        AllowedPattern: (?!^(\d{1,3}\.){3}\d{1,3}$)(^[a-z0-9]([a-z0-9-]*(\.[a-z0-9])?)*$(?<!\-))
+        ConstraintDescription: Invalid S3 Bucket name, make sure you JUST putting in the name of your bucket   
+    S3BotoCodeZip:
         Description: The name of the .zip in the above bucket (if in a folder, be sure to include the path, i.e. layers/updated-boto3.zip)
         Type: String
-        Default: updated-boto3.zip        
+        Default: updated-boto3.zip 
+        AllowedPattern: .*\.zip$
+        ConstraintDescription: Lambda Key or Boto Key location does not end in .zip        
 Resources:
     SlackKMSKey:
         Type: 'AWS::KMS::Key'
@@ -85,7 +93,7 @@ Resources:
         Properties:
             AliasName: !Sub 'alias/${AWS::StackName}'
             TargetKeyId: !Ref SlackKMSKey
-    SHDIssuesTable:
+    HealthIssuesTable:
         Type: AWS::DynamoDB::Table
         Properties:
           AttributeDefinitions:
@@ -97,9 +105,6 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 5
             WriteCapacityUnits: 5
-          TimeToLiveSpecification:
-            AttributeName: ttl
-            Enabled: TRUE
     EncryptLambdaExecutionRole:
         Type: AWS::IAM::Role
         Properties:
@@ -186,7 +191,7 @@ Resources:
                           - dynamodb:UpdateItem
                           - dynamodb:UpdateTable
                           - dynamodb:GetRecords
-                        Resource: !GetAtt SHDIssuesTable.Arn
+                        Resource: !GetAtt HealthIssuesTable.Arn
         DependsOn: SlackKMSKey
     LambdaKMSEncryptHook:
         Type: AWS::Lambda::Function
@@ -227,8 +232,8 @@ Resources:
             CompatibleRuntimes:
               - python3.7
             Content:
-                S3Bucket: !Ref S3LayerCodeBucket
-                S3Key: !Ref S3LayerCodeZip
+                S3Bucket: !Ref S3BotoCodeBucket
+                S3Key: !Ref S3BotoCodeZip
             Description: Updated version of boto3
     LambdaAwsHealthStatus:
         Type: 'AWS::Lambda::Function'
@@ -239,29 +244,29 @@ Resources:
             Role: !GetAtt DecryptLambdaExecutionRole.Arn
             Runtime: python3.7
             Timeout: 90
-            Description: Lambda code to determine if a SHD update has posted
+            Description: Lambda code to determine if a Health Event update has posted
             Code:
                 S3Bucket: !Ref S3LambdaCodeBucket
                 S3Key: !Ref S3LambdaCodeZip
             Environment:
                 Variables:
                     regions: !Ref EnvRegions
-                    ttl: !Ref EnvTimeToLiveSeconds
-                    ddbTable: !Ref SHDIssuesTable
+                    searchback: !Ref EnvTimeToSearch
+                    ddbTable: !Ref HealthIssuesTable
                     encryptedWebHook: !Ref KMSCustomResource         
-    SHDScheduledRule:
+    HealthScheduledRule:
         Type: AWS::Events::Rule
         Properties:
-            Description: 'SHDScheduledRule'
+            Description: 'HealthScheduledRule'
             ScheduleExpression: 'rate(1 minute)'
             State: 'ENABLED'
             Targets:
               - Arn: !GetAtt LambdaAwsHealthStatus.Arn
-                Id: 'SHDHealthEventsToSlack'
+                Id: 'HealthEventsToSlack'
     PermissionForEventsToInvokeLambda:
         Type: AWS::Lambda::Permission
         Properties:
             FunctionName: !GetAtt LambdaAwsHealthStatus.Arn
             Action: lambda:InvokeFunction
             Principal: events.amazonaws.com
-            SourceArn: !GetAtt SHDScheduledRule.Arn
+            SourceArn: !GetAtt HealthScheduledRule.Arn
