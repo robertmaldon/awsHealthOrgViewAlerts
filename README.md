@@ -114,7 +114,7 @@ Before you start you will need to create a Slack Webhook URL that the Lambda wil
 1. Download both the updated CloudFormation Template .yml file and the healthapi .zip for whichever version you are using.   
 2. Upload the newer healthapi .zip version you are using to the same S3 bucket location as the version you are using now. (Version number should be different in the name of the .zip)   
 3. In the AWS CloudFormation console **click** on the name of your stack, then **click** *Update*.   
-4. In the *Prepare template* section **click** *Replace current template*, then **click** *Upload a template file*, then **click** *Chosse file*, then select the newer 'CFT_xxxxx-version.yml' file you downloaded and finally **click** *Next*.   
+4. In the *Prepare template* section **click** *Replace current template*, **click** *Upload a template file*, **click** *Choose file*, select the newer 'CFT_xxxxx-version.yml' file you downloaded and finally **click** *Next*.   
 5. In the *Lambda Key* text box change the version number to match the newer version you uploaded in Step 2. The name of the .zip has to be different for CloudFormation to recognize a change. **Click** *Next*.   
 6. At the next screen **click** *Next* and finally **click** *Update stack*. This will now upgrade your environment to the latest version you downloaded.
 
