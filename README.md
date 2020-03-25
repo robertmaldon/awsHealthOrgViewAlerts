@@ -57,14 +57,14 @@ Before you start you will need to create a Amazon Chime Webhook URL that the Lam
 ### Install AHOVA for Amazon Chime
 **Disclaimer**: As of 2020-03-22, configuring and reading the AWS Health Organizational View API is **only** done via API calls. In other words, you can NOT see entries and/or status in the console. Also, ***AWS Health Organizational View Alerts only starts working once you enable it (Step 1 below), which means any events that occurred before enabling, will not get added. You will need to wait for a Health event to happen to one of the accounts in your AWS Organization to verify everything is working correctly***.
 1. The first thing you will need to do is enable [AWS Organization Health Service Access](https://docs.aws.amazon.com/health/latest/APIReference/API_EnableHealthServiceAccessForOrganization.html).  To do so, you need to have python (at least 3.6) and the following packages installed: `awscli` and `boto3 (at least 1.10.45)`. Configure `awscli` for your AWS Organization Master account, instructions are [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html). Once configured, run the command `aws health enable-health-service-access-for-organization`, to verify it worked run `aws health describe-health-service-status-for-organization`. You should get a response back that says `"healthServiceAccessStatusForOrganization": "ENABLED"`. **Remember, only Health events that occurred from this point forward will be sent to Amazon Chime**.
-2. In the folder `chime-version` you will find three files you will need: `CFT_chime-version.yml`, `healthapi-chime.zip` and `updated-boto3.zip`.   
-3. Upload `healthapi-chime.zip` and `updated-boto3.zip` to S3 in the same region you plan to deploy this in.   
+2. In the folder `chime-version` you will find three files you will need: `CFT_chime-version.yml`, `healthapi-chime-v0.0.0.zip` and `updated-boto3.zip`.   
+3. Upload `healthapi-chimev-0.0.0.zip` and `updated-boto3.zip` to S3 in the same region you plan to deploy this in.   
 4. In your AWS console go to *CloudFormation*.   
 4. In the *CloudFormation* console **click** *Create stack > With new resources (standard)*.   
 5. Under *Template Source* **click** *Upload a template file* and **click** *Choose file*  and select `CFT_chime-version.yml` **Click** *Next*.   
 6. -In *Stack name* type a stack name (i.e. AHOVAChime).   
--In *Lambda Bucket* type ***just*** the name of the S3 bucket that contains `healthapi-chime.zip` (i.e. my-bucket-name).     
--In *Lambda Key* type ***just*** the location of the `healthapi-chime.zip` (i.e. if in root bucket, healthapi-chime.zip or in a folder, foldername/healthapi_chime.zip).   
+-In *Lambda Bucket* type ***just*** the name of the S3 bucket that contains `healthapi-chime-v0.0.0.zip` (i.e. my-bucket-name).     
+-In *Lambda Key* type ***just*** the location of the `healthapi-chime-v0.0.0.zip` (i.e. if in root bucket, healthapi-chime-v0.0.0.zip or in a folder, foldername/healthapi_chime.zip).   
 -In *Boto Key* type ***just*** the location of the `updated-boto3.zip`.   
 -In *Search Back* is the amount of hours to search back for new and/or updated events (default = 24 hours).     
 -In *Regions* leave it blank to search all regions or enter in a comma separated list of specific regions you want to alert on (i.e. us-east-1,us-east-2).   
