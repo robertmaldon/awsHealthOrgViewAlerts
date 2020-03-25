@@ -120,4 +120,4 @@ Before you start you will need to create a Slack Webhook URL that the Lambda wil
 
 # Troubleshooting
 * If for whatever reason you need to update the Webhook URL; just update the CloudFormation Template with the new Webhook URL (minus the https:// of course) and the KMSEncryptionLambda will encrypt the new Webhook URL and update the DecryptionLambda.
-* If you are expecting an event and it did not show up it may be an oddly formed event. Take a look at CloudWatch > Log groups and look at the Lambda that sends to Chime/Slack.  See what the error is and reach out to me via [email](mailto:jordroth@amazon.com) for help.
+* If you are expecting an event and it did not show up it may be an oddly formed event. Take a look at *CloudWatch > Log groups* and search for the name of your Cloudformation stack and Lambda function.  See what the error is and reach out to me via [email](mailto:jordroth@amazon.com) for help.
