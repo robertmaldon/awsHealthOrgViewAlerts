@@ -23,7 +23,8 @@ def update_ddb(objTable, strArn, strUpdate, now, intHours):
       Item ={
         'arn' : strArn,
         'lastUpdatedTime' : strUpdate,
-        'added' : now
+        'added' : now,
+        'ttl' : int(now) + int(intHours) + 3600
       }
     )
 # aws.health affected accounts

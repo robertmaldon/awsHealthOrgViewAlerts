@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'   
-Description: 'aws organization view health api chime notifications for customers who have business or enterprise support'
+Description: 'AWS Health Organizational View Alerts - Chime notifications for customers who have Business or Enterprise Support'
 Metadata:
     License: Apache-2.0
     AWS::CloudFormation::Interface:
@@ -62,15 +62,15 @@ Parameters:
         AllowedPattern: .*\.zip$
         ConstraintDescription: Lambda Key or Boto Key location does not end in .zip        
     S3BotoCodeBucket:
-        Description: The S3 bucket name that contains the updated-boto3.zip layer package (needs to be in same region you're launching this in)
+        Description: The S3 bucket name that contains the boto3-v0.0.0.zip layer package (needs to be in same region you're launching this in)
         Type: String
         Default: just-bucket-name
         AllowedPattern: (?!^(\d{1,3}\.){3}\d{1,3}$)(^[a-z0-9]([a-z0-9-]*(\.[a-z0-9])?)*$(?<!\-))
         ConstraintDescription: Invalid S3 Bucket name, make sure you JUST put in the name of your bucket        
     S3BotoCodeZip:
-        Description: The name of the .zip in the above bucket (if in a folder, be sure to include the path, i.e. layers/updated-boto3.zip)
+        Description: The name of the .zip in the above bucket (if in a folder, be sure to include the path, i.e. layers/boto3-v0.0.0.zip)
         Type: String
-        Default: updated-boto3.zip  
+        Default: boto3-v0.0.0.zip  
         AllowedPattern: .*\.zip$
         ConstraintDescription: Lambda Key or Boto Key location does not end in .zip          
 Resources:
@@ -105,6 +105,9 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 5
             WriteCapacityUnits: 5
+          TimeToLiveSpecification:
+            AttributeName: ttl
+            Enabled: TRUE
     EncryptLambdaExecutionRole:
         Type: AWS::IAM::Role
         Properties:
