@@ -11,6 +11,7 @@ from dateutil import parser
 from base64 import b64decode
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
+from botocore.config import Config
 
 # date differential function
 def diff_dates(strDate1, strDate2):
@@ -27,21 +28,26 @@ def update_ddb(objTable, strArn, strUpdate, now, intHours):
         'ttl' : int(now) + int(intHours) + 3600
       }
     )
+
 # aws.health affected accounts
 def get_healthAccounts (awshealth, event, strArn, awsRegion):
-    event_accounts = awshealth.describe_affected_accounts_for_organization (
+    affectedAccounts = []
+    event_accounts_paginator = awshealth.get_paginator('describe_affected_accounts_for_organization')
+    event_accounts_page_iterator = event_accounts_paginator.paginate(
         eventArn=strArn
         )
-    json_event_accounts = json.dumps(event_accounts, cls=DatetimeEncoder)
-    parsed_event_accounts = json.loads (json_event_accounts)
-    affectedAccounts = (parsed_event_accounts['affectedAccounts'])
+    for event_accounts_page in event_accounts_page_iterator:
+        json_event_accounts = json.dumps(event_accounts_page, cls=DatetimeEncoder)
+        parsed_event_accounts = json.loads (json_event_accounts)
+        affectedAccounts = affectedAccounts + (parsed_event_accounts['affectedAccounts'])
     return affectedAccounts
         
 # aws.health affected entities
 def get_healthEntities (awshealth, event, strArn, awsRegion, affectedAccounts):
     if len(affectedAccounts) >= 1:
         affectedAccounts = affectedAccounts[0]
-        event_entities = awshealth.describe_affected_entities_for_organization (
+        event_entities_paginator = awshealth.get_paginator('describe_affected_entities_for_organization')
+        event_entities_page_iterator = event_entities_paginator.paginate(
           organizationEntityFilters=[
             {    
                 'awsAccountId': affectedAccounts,
@@ -49,11 +55,12 @@ def get_healthEntities (awshealth, event, strArn, awsRegion, affectedAccounts):
             }
           ]
         )
-        json_event_entities = json.dumps(event_entities, cls=DatetimeEncoder)
-        parsed_event_entities = json.loads (json_event_entities)
         affectedEntities = []
-        for entity in parsed_event_entities['entities']:
-            affectedEntities.append(entity['entityValue'])
+        for event_entities_page in event_entities_page_iterator:
+            json_event_entities = json.dumps(event_entities_page, cls=DatetimeEncoder)
+            parsed_event_entities = json.loads (json_event_entities)
+            for entity in parsed_event_entities['entities']:
+                affectedEntities.append(entity['entityValue'])
         return affectedEntities
     else:
         affectedEntities = ['All resources\nin region']
@@ -150,7 +157,14 @@ def lambda_handler(event, context):
     strDTMFormat = '%s'
         
     #  creates health object as client.  AWS health only has a us-east-1 endpoint currently
-    awshealth = boto3.client('health', region_name='us-east-1')
+    config = Config(
+        retries = dict(
+            max_attempts = 10 # org view apis have a lower tps than the single
+                              # account apis so we need to use larger
+                              # backoff/retry values than than the boto defaults
+        )
+    )
+    awshealth = boto3.client('health', region_name='us-east-1', config=config)
     dynamodb = boto3.resource("dynamodb")
     kms = boto3.client('kms')
     print("boto3 version:"+boto3.__version__)
@@ -163,7 +177,7 @@ def lambda_handler(event, context):
 
     if dictRegions != "":
         strFilter = {
-                'awsAccountIds':
+                'regions':
                     dictRegions
     	}
     else:
